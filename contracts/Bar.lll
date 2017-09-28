@@ -1,0 +1,40 @@
+;;; TEST CONTRACT
+(seq 
+
+
+
+  (def '*scratch* 0x00)
+  (def '*funcid*  0x20)
+
+  (def '*foo* 0x54b5e571)
+
+  (def '*word* 0x00)
+
+  ;; Shifts the leftmost 4 bytes of a 32-byte number right by 28 bytes.
+  (def 'shift-right (input)
+    (div input (exp 2 224)))
+
+  ;; Gets the function ID and stores it in memory for reference.
+  (def 'get-function-id
+    (mstore *funcid* (shift-right (calldataload 0x00))))
+    
+  (def 'function (function-hash code-body)
+    (when (= (mload *funcid*) function-hash)
+      code-body))
+
+
+  (when(callvalue) 
+    (panic))
+  (codecopy *scratch* (bytecodesize) 32)
+  (sstore *word* (mload *scratch*))
+
+
+  (returnlll
+    (seq 
+      get-function-id
+      (function *foo*
+        (seq
+          (mstore *scratch* (sload *word*))
+          (return *scratch* 32)
+        ))
+    (panic))))
